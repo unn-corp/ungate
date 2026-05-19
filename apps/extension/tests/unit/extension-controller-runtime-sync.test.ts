@@ -71,11 +71,27 @@ vi.mock('vscode', () => {
 			createOutputChannel: createOutputChannelMock,
 			createStatusBarItem: createStatusBarItemMock
 		},
+		workspace: {
+			createFileSystemWatcher: vi.fn(() => ({
+				onDidChange: vi.fn(),
+				onDidCreate: vi.fn(),
+				dispose: vi.fn()
+			}))
+		},
 		commands: {
 			registerCommand: registerCommandMock
 		},
 		StatusBarAlignment: {
 			Right: 1
+		},
+		Uri: {
+			file: (value: string) => ({ fsPath: value })
+		},
+		RelativePattern: class {
+			constructor(
+				public readonly base: unknown,
+				public readonly pattern: string
+			) {}
 		},
 		MarkdownString: TestHelper.createMarkdownStringClass()
 	};

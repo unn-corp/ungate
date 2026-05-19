@@ -1,3 +1,5 @@
+import * as path from 'node:path';
+
 import {
 	DEFAULT_KEY_FIX_ENABLED,
 	sleep,
@@ -32,6 +34,8 @@ export class ExtensionController {
 	private readonly windowId = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 	private heartbeatTimer: NodeJS.Timeout | null = null;
 	private syncTimer: NodeJS.Timeout | null = null;
+	private runtimeStateWatcher: vscode.FileSystemWatcher | null = null;
+	private runtimeStateSyncDebounce: NodeJS.Timeout | null = null;
 	private lastCommandId: string | null = null;
 	private extensionHostActive = false;
 
@@ -57,6 +61,9 @@ export class ExtensionController {
 			},
 			(message) => {
 				this.log(message);
+			},
+			() => {
+				return this.isLeaderWindow();
 			}
 		);
 
@@ -112,6 +119,7 @@ export class ExtensionController {
 
 		this.startHeartbeat();
 		this.startRuntimeSync();
+		this.startRuntimeStateWatch();
 		void this.bootstrapRuntime()
 			.then(() => this.keyFix.activate())
 			.catch((error: unknown) => {
@@ -142,6 +150,16 @@ export class ExtensionController {
 		if (this.syncTimer) {
 			clearInterval(this.syncTimer);
 			this.syncTimer = null;
+		}
+
+		if (this.runtimeStateSyncDebounce) {
+			clearTimeout(this.runtimeStateSyncDebounce);
+			this.runtimeStateSyncDebounce = null;
+		}
+
+		if (this.runtimeStateWatcher) {
+			this.runtimeStateWatcher.dispose();
+			this.runtimeStateWatcher = null;
 		}
 
 		this.keyFix?.stop();
@@ -391,6 +409,28 @@ export class ExtensionController {
 		this.syncTimer = setInterval(() => {
 			void this.syncFromRuntimeState().catch(() => {});
 		}, config.extensionController.runtimeSyncIntervalMs);
+	}
+
+	private startRuntimeStateWatch(): void {
+		const stateFileName = path.basename(config.paths.stateFilePath);
+
+		this.runtimeStateWatcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(vscode.Uri.file(config.baseDir), stateFileName)
+		);
+
+		const scheduleSync = (): void => {
+			if (this.runtimeStateSyncDebounce) {
+				clearTimeout(this.runtimeStateSyncDebounce);
+			}
+
+			this.runtimeStateSyncDebounce = setTimeout(() => {
+				this.runtimeStateSyncDebounce = null;
+				void this.syncFromRuntimeState().catch(() => {});
+			}, 100);
+		};
+
+		this.runtimeStateWatcher.onDidChange(scheduleSync);
+		this.runtimeStateWatcher.onDidCreate(scheduleSync);
 	}
 
 	private async bootstrapRuntime(): Promise<void> {

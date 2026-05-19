@@ -155,13 +155,13 @@ export const createSvelteEslintConfig = ({
 		...rules,
 		...htmlRules,
 		...svelteOnlyRules,
-	'simple-import-sort/imports': [
-		'error',
-		{
-			groups: svelteImportSortGroups
-		}
-	],
-	'simple-import-sort/exports': 'error',
+		'simple-import-sort/imports': [
+			'error',
+			{
+				groups: svelteImportSortGroups
+			}
+		],
+		'simple-import-sort/exports': 'error',
 		'prettier/prettier': [
 			'error',
 			{

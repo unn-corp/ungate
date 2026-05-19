@@ -77,13 +77,18 @@ export class OpenAiKeyFix {
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly onStateChange: StateChangeHandler,
-		private readonly log: Logger
+		private readonly log: Logger,
+		private readonly isLeaderWindow: () => boolean
 	) {
 		const globalStorageDir = path.dirname(context.globalStorageUri.fsPath);
 		this.stateDbPath = path.join(globalStorageDir, config.files.stateDb);
 	}
 
 	public isEnabled(): boolean {
+		if (!this.state.activated) {
+			return RuntimeStateStore.read().keyFix.enabled;
+		}
+
 		return this.state.enabled;
 	}
 
@@ -97,7 +102,6 @@ export class OpenAiKeyFix {
 
 	public async applySharedState(enabled: boolean): Promise<void> {
 		if (!this.state.activated) {
-			this.state.enabled = enabled;
 			this.onStateChange(enabled);
 
 			return;
@@ -105,6 +109,7 @@ export class OpenAiKeyFix {
 
 		if (this.state.enabled === enabled) {
 			this.onStateChange(enabled);
+			this.reconcileMonitoring();
 
 			return;
 		}
@@ -146,7 +151,11 @@ export class OpenAiKeyFix {
 	}
 
 	private startMonitoring(): void {
-		if (!this.state.enabled || !this.state.activated) {
+		if (!this.state.enabled || !this.state.activated || !this.isLeaderWindow()) {
+			return;
+		}
+
+		if (!this.isKeyFixEnabledInSharedState()) {
 			return;
 		}
 
@@ -216,6 +225,16 @@ export class OpenAiKeyFix {
 			return;
 		}
 
+		if (!this.isKeyFixEnabledInSharedState()) {
+			this.disableFromShared();
+
+			return;
+		}
+
+		if (!this.isLeaderWindow()) {
+			return;
+		}
+
 		const unavailableReason = this.getUnavailableReason();
 
 		if (unavailableReason) {
@@ -231,17 +250,25 @@ export class OpenAiKeyFix {
 		this.state.running = true;
 
 		try {
-			const enabled = await this.readUseOpenAiKey();
-
-			if (enabled === false) {
-				this.log(`${config.logPrefix} key was disabled, re-enabling`);
-				await vscode.commands.executeCommand(config.key.toggleCommand);
-			}
+			await this.enableOpenAiKeyIfNeeded(true);
 		} catch (error) {
 			this.log(`${config.logPrefix} check failed: ${String(error)}`);
 		} finally {
 			this.state.running = false;
 		}
+	}
+
+	private async enableOpenAiKeyIfNeeded(onlyWhenExplicitlyOff = false): Promise<void> {
+		const current = await this.readUseOpenAiKey();
+		const shouldEnable = onlyWhenExplicitlyOff ? current === false : current !== true;
+
+		if (!shouldEnable) {
+			return;
+		}
+
+		const reason = onlyWhenExplicitlyOff ? 'key was disabled, re-enabling' : 'enabling OpenAI API Key in Cursor';
+		this.log(`${config.logPrefix} ${reason}`);
+		await vscode.commands.executeCommand(config.key.toggleCommand);
 	}
 
 	private async disableOpenAiKeyIfNeeded(): Promise<void> {
@@ -291,14 +318,15 @@ export class OpenAiKeyFix {
 			this.state.enabled = true;
 			this.onStateChange(true);
 			this.log(`${config.logPrefix} ${unavailableReason}`);
+			this.reconcileMonitoring();
 
 			return;
 		}
 
 		this.state.enabled = true;
 		this.onStateChange(true);
-		this.startMonitoring();
-		await this.checkAndFix();
+		await this.enableOpenAiKeyIfNeeded();
+		this.reconcileMonitoring();
 	}
 
 	private disableFromShared(): void {
@@ -315,8 +343,40 @@ export class OpenAiKeyFix {
 		}
 
 		await this.syncState(true);
-		this.startMonitoring();
-		await this.checkAndFix();
+
+		try {
+			await this.enableOpenAiKeyIfNeeded();
+		} catch (error) {
+			this.log(`${config.logPrefix} failed to enable key: ${String(error)}`);
+			throw error;
+		}
+
+		this.reconcileMonitoring();
+	}
+
+	private isKeyFixEnabledInSharedState(): boolean {
+		return RuntimeStateStore.read().keyFix.enabled;
+	}
+
+	private isMonitoringActive(): boolean {
+		return this.runtime.pollInterval !== null;
+	}
+
+	private reconcileMonitoring(): void {
+		const shouldMonitor =
+			this.state.enabled && this.state.activated && this.isLeaderWindow() && this.isKeyFixEnabledInSharedState();
+
+		if (shouldMonitor === this.isMonitoringActive()) {
+			return;
+		}
+
+		if (shouldMonitor) {
+			this.startMonitoring();
+
+			return;
+		}
+
+		this.stopMonitoring();
 	}
 
 	private async disableByUser(): Promise<void> {
