@@ -73,7 +73,7 @@ describe('proxy-responses-input-normalizer', () => {
 		expect(payload.instructions).toBe('extra');
 	});
 
-	it('flattens chat-completions tools into responses format', () => {
+	it('flattens chat-completions tools so Codex receives tools[0].name', () => {
 		const { payload } = ResponsesBodyBuilder.buildBody(
 			{
 				model: 'gpt-5.5',
@@ -103,6 +103,8 @@ describe('proxy-responses-input-normalizer', () => {
 				strict: true
 			}
 		]);
+		expect((payload.tools as Record<string, unknown>[])[0].name).toBe('Shell');
+		expect((payload.tools as Record<string, unknown>[])[0].function).toBeUndefined();
 		expect(payload.parallel_tool_calls).toBe(false);
 	});
 
