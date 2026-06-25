@@ -69,7 +69,41 @@ describe('proxy-responses-input-normalizer', () => {
 		const input = payload.input as Record<string, unknown>[];
 		expect(input.some((item) => item.type === 'function_call_output' && item.call_id === 'missing')).toBe(false);
 		expect(payload.tool_choice).toEqual({ type: 'function', name: 'Read' });
+		expect(payload.tools).toEqual([{ type: 'function', name: 'Read', parameters: { type: 'object', properties: {} } }]);
 		expect(payload.instructions).toBe('extra');
+	});
+
+	it('flattens chat-completions tools into responses format', () => {
+		const { payload } = ResponsesBodyBuilder.buildBody(
+			{
+				model: 'gpt-5.5',
+				messages: [{ role: 'user', content: 'hello' }],
+				tools: [
+					{
+						type: 'function',
+						function: {
+							name: 'Shell',
+							description: 'Run a shell command',
+							parameters: { type: 'object', properties: { command: { type: 'string' } } },
+							strict: true
+						}
+					}
+				]
+			},
+			'gpt-5.5-xhigh',
+			{ instructionsFallback: 'fallback', extraInstruction: '', envInstructions: '' }
+		);
+
+		expect(payload.tools).toEqual([
+			{
+				type: 'function',
+				name: 'Shell',
+				description: 'Run a shell command',
+				parameters: { type: 'object', properties: { command: { type: 'string' } } },
+				strict: true
+			}
+		]);
+		expect(payload.parallel_tool_calls).toBe(false);
 	});
 
 	it('prefers explicit reasoning over model-derived effort and keeps no tool_choice without tools', () => {
