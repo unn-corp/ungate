@@ -72,7 +72,7 @@ export class ResponsesBodyBuilder {
 		}
 
 		if (hasTools) {
-			payload.tools = rawTools;
+			payload.tools = rawTools.map((tool) => this.toResponsesTool(tool));
 			payload.tool_choice = this.mapChoice(body.tool_choice, true) ?? 'auto';
 			payload.parallel_tool_calls = false;
 		}
@@ -85,6 +85,36 @@ export class ResponsesBodyBuilder {
 		};
 
 		return { payload, debug };
+	}
+
+	// The Responses API expects function tools in a flattened shape with `name`,
+	// `description`, and `parameters` at the top level — unlike Chat Completions,
+	// which nests them under `function`. Cursor sends the nested form, so flatten
+	// it here; otherwise the upstream rejects with "Missing required parameter:
+	// 'tools[0].name'". Pass through tools that are already flat or non-function.
+	private static toResponsesTool(tool: unknown): Record<string, unknown> {
+		const record = (tool ?? {}) as Record<string, unknown>;
+		const fn = record.function as Record<string, unknown> | undefined;
+
+		if (record.type === 'function' && fn && typeof fn.name === 'string') {
+			const flattened: Record<string, unknown> = {
+				type: 'function',
+				name: fn.name,
+				parameters: fn.parameters ?? { type: 'object', properties: {} }
+			};
+
+			if (typeof fn.description === 'string') {
+				flattened.description = fn.description;
+			}
+
+			if (typeof fn.strict === 'boolean') {
+				flattened.strict = fn.strict;
+			}
+
+			return flattened;
+		}
+
+		return record;
 	}
 
 	private static mapChoice(

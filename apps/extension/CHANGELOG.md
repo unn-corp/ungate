@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.2 - 2026-06-25
+
+- Add Opus-4.8 model support
+- Map reasoning tiers to adaptive thinking + effort for Opus 4.7/4.8 (previously dropped)
+- Fix Codex (GPT-5.5) tool calls failing with "Missing required parameter: 'tools[0].name'" by flattening tools to Responses API format
+
 ## 1.7.1 - 2026-05-25
 
 - Update changelog
