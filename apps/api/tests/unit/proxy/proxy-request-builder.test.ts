@@ -34,7 +34,22 @@ describe('proxy-request-builder', () => {
 		expect(userBlock.cache_control?.ttl).toBeUndefined();
 	});
 
-	it('maps numeric reasoning budget onto an effort tier', () => {
+	it('passes each reasoning tier through verbatim as the effort level', () => {
+		for (const tier of ['low', 'medium', 'high', 'xhigh'] as const) {
+			const prepared = RequestBuilder.prepareClaudeCodeBody({
+				model: 'claude-opus-4-8',
+				max_tokens: 1024,
+				reasoning_budget: tier,
+				messages: [{ role: 'user', content: 'hello' }]
+			});
+
+			expect(prepared.reasoning_budget).toBeUndefined();
+			expect(prepared.thinking).toEqual({ type: 'adaptive' });
+			expect(prepared.output_config).toEqual({ effort: tier });
+		}
+	});
+
+	it('ignores a non-tier reasoning budget without enabling thinking', () => {
 		const prepared = RequestBuilder.prepareClaudeCodeBody({
 			model: 'claude-opus-4-8',
 			max_tokens: 1024,
@@ -43,8 +58,8 @@ describe('proxy-request-builder', () => {
 		});
 
 		expect(prepared.reasoning_budget).toBeUndefined();
-		expect(prepared.thinking).toEqual({ type: 'adaptive' });
-		expect(prepared.output_config).toEqual({ effort: 'medium' });
+		expect(prepared.thinking).toBeUndefined();
+		expect(prepared.output_config).toBeUndefined();
 	});
 
 	it('does not set thinking when no reasoning budget is provided', () => {
