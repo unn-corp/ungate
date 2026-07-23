@@ -36,6 +36,7 @@ describe('TunnelManager readiness', () => {
 		expect(manager.getState()).toMatchObject({ status: 'starting', url: null });
 		mocks.handlers.get('stderr')?.('Registered tunnel connection abc' as never);
 		expect(manager.getState()).toMatchObject({ status: 'running', url: 'https://allocated.trycloudflare.com' });
+		await Promise.resolve();
 		expect(states.at(-1)).toMatchObject({ status: 'running', url: 'https://allocated.trycloudflare.com' });
 	});
 });

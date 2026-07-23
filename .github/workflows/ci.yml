@@ -20,6 +20,7 @@ jobs:
       - run: corepack prepare pnpm@10.33.1 --activate
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @ungate/dev-kit build
+      - run: pnpm --filter @ungate/shared build
       - run: pnpm test
       - run: pnpm run package:build
       - uses: actions/upload-artifact@v4
