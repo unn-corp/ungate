@@ -124,6 +124,23 @@ export class RuntimeStateStore {
 		});
 	}
 
+	public static async clearStaleTunnelForBootstrap(windowId: string): Promise<RuntimeState> {
+		return await this.mutate((current) => {
+			const ownerWindowId = current.tunnel.ownerWindowId;
+			const ownerIsLive = ownerWindowId !== null && this.getLiveClientIds(current).includes(ownerWindowId);
+
+			if ((current.tunnel.status === 'running' || current.tunnel.status === 'starting') && !ownerIsLive) {
+				current.tunnel.status = 'stopped';
+				current.tunnel.url = null;
+				current.tunnel.ownerWindowId = null;
+				current.tunnel.lastSeenAt = Date.now();
+				current.tunnel.lastError = 'Previous Cursor session ended. Restart the tunnel to create a new URL.';
+			}
+
+			return current;
+		});
+	}
+
 	public static async suppressApiAutoStart(message: string): Promise<void> {
 		await this.mutate((current) => {
 			const now = Date.now();

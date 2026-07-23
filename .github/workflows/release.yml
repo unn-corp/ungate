@@ -1,0 +1,41 @@
+name: Release VSIX
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack prepare pnpm@10.33.1 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm run package:build
+      - name: Prepare release assets and notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p release
+          cp apps/extension/out/ungate.vsix "release/unn-corp.ungate-${version}.vsix"
+          sha256sum "release/unn-corp.ungate-${version}.vsix" > "release/unn-corp.ungate-${version}.vsix.sha256"
+          {
+            echo "## UNN Ungate ${version}"
+            echo
+            sed -n "/^## ${version} /,/^## /p" apps/extension/CHANGELOG.md | sed '$d'
+            echo
+            echo "See UPSTREAM.md for included upstream-sync history."
+          } > release-notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          generate_release_notes: true
+          files: release/*

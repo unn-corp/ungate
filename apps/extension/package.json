@@ -2,23 +2,22 @@
 	"name": "ungate",
 	"displayName": "Ungate",
 	"description": "Use Claude, GPT, or MiniMax subscriptions in Cursor instead of paying for API tokens",
-	"version": "1.7.3",
-	"publisher": "orchidfiles",
+	"version": "1.7.4",
+	"publisher": "unn-corp",
 	"license": "MIT",
 	"pricing": "Free",
 	"author": {
-		"name": "orchidfiles",
-		"email": "orchid@orchidfiles.com",
-		"url": "https://orchidfiles.com"
+		"name": "UNN Corp",
+		"url": "https://github.com/unn-corp/ungate"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/orchidfiles/ungate.git"
+		"url": "https://github.com/unn-corp/ungate.git"
 	},
 	"bugs": {
-		"url": "https://github.com/orchidfiles/ungate/issues"
+		"url": "https://github.com/unn-corp/ungate/issues"
 	},
-	"homepage": "https://github.com/orchidfiles/ungate",
+	"homepage": "https://github.com/unn-corp/ungate",
 	"keywords": [
 		"claude",
 		"anthropic",
@@ -84,5 +83,5 @@
 		"typescript": "~5.7.0",
 		"vitest": "~4.0.18"
 	},
-	"packageManager": "pnpm@10.24.0"
+	"packageManager": "pnpm@10.33.1"
 }

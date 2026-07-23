@@ -5,7 +5,9 @@ import * as path from 'node:path';
 
 const DEFAULT_NODE_COMMAND = 'node';
 
-interface RuntimeInfo {
+export interface RuntimeInfo {
+	version: string;
+	major: number;
 	abi: string;
 	platform: string;
 	arch: string;
@@ -31,7 +33,10 @@ export class NodeResolver {
 	static inspect(runtime: string): RuntimeInfo {
 		const result = cp.spawnSync(
 			runtime,
-			['-p', 'JSON.stringify({ abi: process.versions.modules, platform: process.platform, arch: process.arch })'],
+			[
+				'-p',
+				'JSON.stringify({ version: process.version, major: Number(process.versions.node.split(".")[0]), abi: process.versions.modules, platform: process.platform, arch: process.arch })'
+			],
 			{ encoding: 'utf8' }
 		);
 
@@ -46,14 +51,26 @@ export class NodeResolver {
 		return JSON.parse(result.stdout.trim()) as RuntimeInfo;
 	}
 
+	static requireNode22(runtime: string): RuntimeInfo {
+		const info = this.inspect(runtime);
+
+		if (info.major !== 22 || info.abi !== '127') {
+			throw new Error(
+				`Unsupported Node runtime at ${runtime}: detected ${info.version} (ABI ${info.abi}). Ungate 1.7.4 supports Node 22.x only. Install and select Node 22 (for example: nvm install 22 && nvm use 22), or set UNGATE_NODE_BIN to its executable path.`
+			);
+		}
+
+		return info;
+	}
+
 	private static getCandidates(): string[] {
 		const candidates: string[] = [];
 		const seen = new Set<string>();
 		const homeDir = os.homedir();
 		const binaryName = process.platform === 'win32' ? 'node.exe' : 'node';
 
-		this.push(candidates, seen, DEFAULT_NODE_COMMAND);
 		this.push(candidates, seen, process.env.UNGATE_NODE_BIN);
+		this.push(candidates, seen, DEFAULT_NODE_COMMAND);
 
 		if (process.platform === 'darwin') {
 			this.push(candidates, seen, '/opt/homebrew/bin/node');

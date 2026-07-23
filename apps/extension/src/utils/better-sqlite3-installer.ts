@@ -48,6 +48,10 @@ export class BetterSqlite3Installer {
 	}
 
 	static async ensureInstalled(apiDir: string, runtime: string, callbacks: InstallCallbacks): Promise<void> {
+		// Keep this guard here as well as ApiServer so direct callers can never request an
+		// artifact for an unsupported ABI.
+		NodeResolver.requireNode22(runtime);
+
 		if (RuntimeStateStore.isApiStartSuppressed()) {
 			const runtimeState = RuntimeStateStore.read();
 			throw new Error(runtimeState.api.lastError ?? '[native] better-sqlite3 prebuilt installation failed');
@@ -87,7 +91,7 @@ export class BetterSqlite3Installer {
 		const binaryPath = this.getBinaryPath(apiDir);
 		const installedBinaryPath = this.getInstalledBinaryPath(apiDir);
 		const version = this.readBundledVersion(apiDir);
-		const info = NodeResolver.inspect(runtime);
+		const info = NodeResolver.requireNode22(runtime);
 		const tarName = `better-sqlite3-v${version}-node-v${info.abi}-${info.platform}-${info.arch}.tar.gz`;
 		const url = `https://github.com/WiseLibs/better-sqlite3/releases/download/v${version}/${tarName}`;
 

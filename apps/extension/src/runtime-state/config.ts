@@ -32,7 +32,9 @@ export const config = {
 	},
 	tunnelManager: {
 		// Interval for checking if tunnel should auto-stop without live windows.
-		autoStopCheckIntervalMs: 1500
+		autoStopCheckIntervalMs: 1500,
+		// A quick-tunnel URL is not usable until cloudflared confirms connector registration.
+		readinessTimeoutMs: 30000
 	},
 	extensionController: {
 		// Interval between heartbeat updates from the current window.

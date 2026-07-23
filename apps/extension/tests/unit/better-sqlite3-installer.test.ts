@@ -38,7 +38,10 @@ vi.mock('../../src/utils/node-resolver', () => {
 	return {
 		NodeResolver: {
 			inspect: vi.fn(() => {
-				return { abi: '137', platform: 'win32', arch: 'x64' };
+				return { version: 'v22.16.0', major: 22, abi: '127', platform: 'win32', arch: 'x64' };
+			}),
+			requireNode22: vi.fn(() => {
+				return { version: 'v22.16.0', major: 22, abi: '127', platform: 'win32', arch: 'x64' };
 			})
 		}
 	};

@@ -1,17 +1,16 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/orchidfiles/ungate/main/apps/extension/resources/icon.png" alt="Ungate" width="80" />
+  <img src="https://raw.githubusercontent.com/unn-corp/ungate/main/apps/extension/resources/icon.png" alt="Ungate" width="80" />
 </p>
 
-<h3 align="center">Ungate</h3>
+<h3 align="center">UNN Ungate</h3>
 
 <p align="center">
   A Cursor-first extension for using Claude, ChatGPT, and MiniMax subscriptions in Cursor<br/> instead of paying for API tokens.
 </p>
 
 <p align="center">
-  <a href="https://open-vsx.org/extension/orchidfiles/ungate"><img src="https://img.shields.io/open-vsx/dt/orchidfiles/ungate" alt="Open VSX Downloads" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" /></a>
-  <a href="https://github.com/orchidfiles/ungate"><img src="https://img.shields.io/github/last-commit/orchidfiles/ungate" alt="Last commit" /></a>
+  <a href="https://github.com/unn-corp/ungate"><img src="https://img.shields.io/github/last-commit/unn-corp/ungate" alt="Last commit" /></a>
 </p>
 
 ## How it works
@@ -75,21 +74,21 @@ sequenceDiagram
 ## Prerequisites
 
 - Cursor with custom OpenAI provider support enabled.
-- System Node.js installed on the machine. Ungate starts its local API through the system Node runtime.
+- Node.js **22.x** installed on the machine. Ungate starts its local API through this runtime and rejects every other Node major before downloading a native dependency.
 - Outbound internet access for OAuth and provider APIs.
 - A reachable public tunnel URL because Cursor backend cannot call `localhost`.
 
 ## Installation
 
-Install from the marketplace:
+Install a VSIX from the [GitHub Releases](https://github.com/unn-corp/ungate/releases) page:
 
 ```sh
-cursor --install-extension orchidfiles.ungate
+cursor --install-extension /path/to/unn-corp.ungate-1.7.4.vsix
 ```
 
-Or search `@id:orchidfiles.ungate` in the Extensions panel.
+Or use Cursor's Extensions panel → `...` → **Install from VSIX...**. Verify the installed extension ID is `unn-corp.ungate`.
 
-[Open VSX](https://open-vsx.org/extension/orchidfiles/ungate)
+This maintained distribution is intentionally GitHub-release only; it is not published to Open VSX or the marketplace.
 
 ## Setup
 
@@ -106,6 +105,8 @@ For MiniMax, enter your API key and choose a Base URL: `Global`, `China`, or `Cu
 1. In the `Tunnel` section, click `Start tunnel`, then copy the public URL shown in the panel.
 2. Paste it into `Cursor Settings → Models → OpenAI Base URL`.
 3. Copy the proxy API key from the same panel and paste it into `Cursor Settings → Models → OpenAI API Key`.
+
+Quick-tunnel URLs are process-bound and change whenever you restart the tunnel. Copy the newly displayed URL to Cursor every time it changes. A Cloudflare **1033** response means the old connector is gone or stale: choose **Restart Tunnel**, wait for it to show Running, then copy the new URL into Cursor's OpenAI Base URL.
 
 If Cursor turns `OpenAI API Key` off on its own, Ungate can turn it back on automatically. You can control this from the status bar tooltip and the dashboard.
 
@@ -138,7 +139,7 @@ If Cursor turns `OpenAI API Key` off on its own, Ungate should turn it back on a
 ## Local build and install in Cursor
 
 ```sh
-git clone https://github.com/orchidfiles/ungate.git
+git clone https://github.com/unn-corp/ungate.git
 cd ungate
 pnpm install
 pnpm run package:build
@@ -179,6 +180,8 @@ DB_PATH=$HOME/.ungate/data-dev.db PORT=4784 node dist/main.js
 | Cursor ignores base URL | Selected model is built-in | Switch to custom model ID from Ungate `Models` |
 | `401` from proxy | Cursor API key field | Paste proxy API key from Ungate dashboard |
 | `404` or timeout through tunnel | Tunnel status in Ungate panel | Restart tunnel from dashboard |
+| Cloudflare `1033` | Tunnel URL points to a previous connector | Restart Tunnel, then copy its new URL into Cursor |
+| `Unsupported Node runtime` | Node version in the Ungate output log | Install Node 22, or set `UNGATE_NODE_BIN` to a Node 22 executable |
 | OAuth session expired | Provider connection status | Reconnect provider in dashboard |
 | Model missing in Cursor | Custom model list in Cursor | Add model ID manually from Ungate `Models` |
 
@@ -196,10 +199,8 @@ MIT
 
 ## Support
 
-Bug reports and feature requests: [GitHub issues](https://github.com/orchidfiles/ungate/issues)  
-Everything else: [orchid@orchidfiles.com](mailto:orchid@orchidfiles.com)
+Bug reports and feature requests: [GitHub issues](https://github.com/unn-corp/ungate/issues)
 
 ---
 
-Made by the author of [orchidfiles.com](https://orchidfiles.com) — essays from inside startups.  
-If you found `ungate` useful, you'll probably enjoy the essays.
+UNN Ungate is an MIT-licensed maintained fork of [orchidfiles/ungate](https://github.com/orchidfiles/ungate). See [UPSTREAM.md](./UPSTREAM.md) for attribution and the manual upstream-sync process.

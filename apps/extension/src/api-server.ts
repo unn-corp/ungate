@@ -490,6 +490,8 @@ export class ApiServer {
 		const apiDir = this.getServerCwd();
 		const runtime = this.resolveRuntimePath(NodeResolver.resolve(process.env.UNGATE_NODE_BIN));
 		this.runtimePath = runtime;
+		const runtimeInfo = NodeResolver.requireNode22(runtime);
+		this.callbacks.onLog('info', `[process] Node runtime accepted: ${runtime} (${runtimeInfo.version}, ABI ${runtimeInfo.abi})`);
 
 		await BetterSqlite3Installer.ensureInstalled(apiDir, runtime, {
 			onLog: (level, message) => {

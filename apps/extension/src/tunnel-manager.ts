@@ -28,6 +28,8 @@ export class TunnelManager {
 	private state: TunnelState = { status: 'stopped', url: null, error: null };
 	private readonly windowId: string;
 	private autoStopTimer: NodeJS.Timeout | null = null;
+	private readinessTimer: NodeJS.Timeout | null = null;
+	private pendingUrl: string | null = null;
 
 	constructor(
 		windowId: string,
@@ -65,6 +67,8 @@ export class TunnelManager {
 	}
 
 	stop(): void {
+		this.clearReadinessTimer();
+		this.pendingUrl = null;
 		if (this.autoStopTimer) {
 			clearInterval(this.autoStopTimer);
 			this.autoStopTimer = null;
@@ -139,11 +143,12 @@ export class TunnelManager {
 			'--edge-ip-version': '4'
 		});
 		this.tunnel = t;
+		this.pendingUrl = null;
+		this.startReadinessTimer();
 
 		t.on('url', (url) => {
-			this.onLog({ timestamp: Date.now(), level: 'info', message: `Tunnel URL: ${url}` });
-			this.setState({ status: 'running', url, error: null });
-			this.scheduleAutoStop();
+			this.pendingUrl = url;
+			this.onLog({ timestamp: Date.now(), level: 'info', message: `Tunnel URL allocated; waiting for Cloudflare connector registration: ${url}` });
 		});
 
 		t.on('stderr', (data) => {
@@ -151,11 +156,19 @@ export class TunnelManager {
 
 			for (const line of lines) {
 				this.onLog({ timestamp: Date.now(), level: 'info', message: line });
+				if (line.includes('Registered tunnel connection') && this.pendingUrl && this.state.status === 'starting') {
+					const url = this.pendingUrl;
+					this.clearReadinessTimer();
+					this.setState({ status: 'running', url, error: null });
+					this.scheduleAutoStop();
+				}
 			}
 		});
 
 		t.on('error', (err) => {
 			const message = err.message;
+			this.clearReadinessTimer();
+			this.pendingUrl = null;
 			this.onLog({ timestamp: Date.now(), level: 'error', message: `Tunnel error: ${message}` });
 			this.setState({ status: 'error', url: null, error: message });
 		});
@@ -163,18 +176,47 @@ export class TunnelManager {
 		t.on('exit', (code, signal) => {
 			this.onLog({ timestamp: Date.now(), level: 'warn', message: `Tunnel exited code=${code} signal=${signal}` });
 
+			this.clearReadinessTimer();
+			this.pendingUrl = null;
 			const wasStarting = this.state.status === 'starting';
 
 			if (this.state.status !== 'stopped') {
-				const next: TunnelState = wasStarting
-					? { status: 'error', url: null, error: `Process exited before tunnel was ready (code=${code})` }
-					: { status: 'stopped', url: null, error: null };
+				const reason = wasStarting
+					? `Process exited before tunnel was ready (code=${code}, signal=${signal})`
+					: `Cloudflare connector exited unexpectedly (code=${code}, signal=${signal}). Restart the tunnel to create a new URL.`;
+				const next: TunnelState = { status: 'error', url: null, error: reason };
 
 				this.setState(next);
 			}
 
 			this.tunnel = null;
 		});
+	}
+
+	private startReadinessTimer(): void {
+		this.clearReadinessTimer();
+		this.readinessTimer = setTimeout(() => {
+			if (this.state.status !== 'starting') {
+				return;
+			}
+
+			this.tunnel?.stop();
+			this.tunnel = null;
+			this.pendingUrl = null;
+			this.setState({
+				status: 'error',
+				url: null,
+				error: 'Cloudflare did not register the tunnel connector before the readiness timeout. Retry Restart Tunnel.'
+			});
+			this.onLog({ timestamp: Date.now(), level: 'error', message: 'Tunnel readiness timed out before Cloudflare registered its connector.' });
+		}, config.tunnelManager.readinessTimeoutMs);
+	}
+
+	private clearReadinessTimer(): void {
+		if (this.readinessTimer) {
+			clearTimeout(this.readinessTimer);
+			this.readinessTimer = null;
+		}
 	}
 
 	private setState(next: TunnelState): void {

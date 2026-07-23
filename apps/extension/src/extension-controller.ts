@@ -438,6 +438,11 @@ export class ExtensionController {
 
 	private async bootstrapRuntime(): Promise<void> {
 		await RuntimeStateStore.touchClient(this.windowId);
+		const tunnelState = await RuntimeStateStore.clearStaleTunnelForBootstrap(this.windowId);
+		if (tunnelState.tunnel.lastError === 'Previous Cursor session ended. Restart the tunnel to create a new URL.') {
+			this.log(`[tunnel] ${tunnelState.tunnel.lastError}`);
+			this.dashboard.pushLog('tunnel', { timestamp: Date.now(), level: 'warn', message: tunnelState.tunnel.lastError });
+		}
 		const runtimeState = await RuntimeStateStore.prepareApiForBootstrap();
 		this.startApiAsLeaderIfNeeded(runtimeState);
 		await this.syncFromRuntimeState();

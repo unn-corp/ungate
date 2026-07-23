@@ -71,21 +71,37 @@ describe('NodeResolver', () => {
 		expect(NodeResolver.resolve()).toBe(programFilesNode);
 	});
 
-	it('inspect returns abi platform and arch from runtime output', () => {
+	it('inspect returns version, ABI, platform, and arch from runtime output', () => {
 		spawnSyncMock.mockReturnValue({
 			error: undefined,
 			status: 0,
-			stdout: '{"abi":"137","platform":"win32","arch":"x64"}',
+			stdout: '{"version":"v22.16.0","major":22,"abi":"127","platform":"win32","arch":"x64"}',
 			stderr: '',
 			pid: 1,
-			output: [null, '{"abi":"137","platform":"win32","arch":"x64"}', ''],
+			output: [null, '{"version":"v22.16.0","major":22,"abi":"127","platform":"win32","arch":"x64"}', ''],
 			signal: null
 		});
 
 		expect(NodeResolver.inspect('C:\\Program Files\\nodejs\\node.exe')).toEqual({
-			abi: '137',
+			version: 'v22.16.0',
+			major: 22,
+			abi: '127',
 			platform: 'win32',
 			arch: 'x64'
 		});
+	});
+
+	it('rejects a non-22 runtime before a native download can begin', () => {
+		spawnSyncMock.mockReturnValue({
+			error: undefined,
+			status: 0,
+			stdout: '{"version":"v26.0.0","major":26,"abi":"147","platform":"linux","arch":"x64"}',
+			stderr: '',
+			pid: 1,
+			output: [null, '', ''],
+			signal: null
+		});
+
+		expect(() => NodeResolver.requireNode22('/opt/node26/bin/node')).toThrow(/Node 22.x only/);
 	});
 });

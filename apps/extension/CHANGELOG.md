@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.4 - 2026-07-22
+
+- First UNN-maintained release, published as `unn-corp.ungate` through GitHub Releases.
+- Require Node 22.x before starting the API or downloading a native SQLite binding; `UNGATE_NODE_BIN` is the explicit desktop-launch override.
+- Treat Cloudflare quick tunnels as process-bound: a persisted URL is cleared after a previous Cursor session, and a URL is exposed only after connector registration.
+
 ## 1.7.3 - 2026-06-25
 
 - Fix Anthropic provider errors with non-JSON bodies so upstream failures return a normal error response instead of crashing the API
