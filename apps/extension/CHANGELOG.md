@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.5 - 2026-07-22
+
+- Retain multiple Claude and ChatGPT OAuth accounts locally.
+- Add an active-account selector; requests use only the selected account.
+- Preserve existing provider credentials during the database migration.
+
 ## 1.7.4 - 2026-07-22
 
 - First UNN-maintained release, published as `unn-corp.ungate` through GitHub Releases.
