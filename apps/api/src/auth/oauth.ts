@@ -119,12 +119,14 @@ export class OAuth {
 			const data: TokenExchangeResponse = await response.json();
 			const expiresAt = Date.now() + data.expires_in * 1000;
 			const email = data.account?.email_address;
+			const accountId = data.account?.uuid;
 
 			ProviderSettings.upsertOAuth('claude', {
 				accessToken: data.access_token,
 				refreshToken: data.refresh_token,
 				expiresAt,
-				email
+				email,
+				accountId
 			});
 
 			logger.log('✓ OAuth login complete', email ? `(${email})` : '');

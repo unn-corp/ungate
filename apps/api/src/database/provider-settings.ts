@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { providerSettings } from './schema';
 
@@ -10,7 +10,20 @@ export class ProviderSettings {
 	static get(provider: AIProviderName) {
 		const db = getDb();
 
-		return db.select().from(providerSettings).where(eq(providerSettings.provider, provider)).get();
+		return db.select().from(providerSettings).where(and(eq(providerSettings.provider, provider), eq(providerSettings.isActive, true))).get();
+	}
+
+	static list(provider: AIProviderName) {
+		return getDb().select().from(providerSettings).where(eq(providerSettings.provider, provider)).all();
+	}
+
+	static activate(provider: AIProviderName, accountKey: string): boolean {
+		const db = getDb();
+		const account = db.select().from(providerSettings).where(and(eq(providerSettings.provider, provider), eq(providerSettings.accountKey, accountKey))).get();
+		if (!account) return false;
+		db.update(providerSettings).set({ isActive: false }).where(eq(providerSettings.provider, provider)).run();
+		db.update(providerSettings).set({ isActive: true }).where(and(eq(providerSettings.provider, provider), eq(providerSettings.accountKey, accountKey))).run();
+		return true;
 	}
 
 	static upsertApiKey(provider: AIProviderName, accessToken: string, baseUrl?: string): void {
@@ -18,13 +31,13 @@ export class ProviderSettings {
 
 		db.insert(providerSettings)
 			.values({
-				provider,
+				provider, accountKey: 'default', isActive: true,
 				accessToken,
 				createdAt: Date.now(),
 				...(baseUrl && { baseUrl })
 			})
 			.onConflictDoUpdate({
-				target: providerSettings.provider,
+				target: [providerSettings.provider, providerSettings.accountKey],
 				set: {
 					accessToken,
 					...(baseUrl !== undefined && { baseUrl })
@@ -35,10 +48,12 @@ export class ProviderSettings {
 
 	static upsertOAuth(provider: AIProviderName, data: OAuthCredentials): void {
 		const db = getDb();
+		const accountKey = data.accountKey ?? data.accountId ?? data.email ?? 'default';
+		db.update(providerSettings).set({ isActive: false }).where(eq(providerSettings.provider, provider)).run();
 
 		db.insert(providerSettings)
 			.values({
-				provider,
+				provider, accountKey, isActive: true,
 				accessToken: data.accessToken,
 				refreshToken: data.refreshToken,
 				expiresAt: data.expiresAt,
@@ -47,7 +62,7 @@ export class ProviderSettings {
 				createdAt: Date.now()
 			})
 			.onConflictDoUpdate({
-				target: providerSettings.provider,
+				target: [providerSettings.provider, providerSettings.accountKey],
 				set: {
 					accessToken: data.accessToken,
 					refreshToken: data.refreshToken,
@@ -73,8 +88,14 @@ export class ProviderSettings {
 	}
 
 	static remove(provider: AIProviderName): void {
-		const db = getDb();
+		const active = this.get(provider);
+		if (active) this.removeAccount(provider, active.accountKey);
+	}
 
-		db.delete(providerSettings).where(eq(providerSettings.provider, provider)).run();
+	static removeAccount(provider: AIProviderName, accountKey: string): void {
+		const db = getDb();
+		db.delete(providerSettings).where(and(eq(providerSettings.provider, provider), eq(providerSettings.accountKey, accountKey))).run();
+		const replacement = this.list(provider)[0];
+		if (replacement) this.activate(provider, replacement.accountKey);
 	}
 }

@@ -28,6 +28,16 @@ const plugin: FastifyPluginCallback = (app) => {
 		return reply.send(OAuth.getAuthStatus());
 	});
 
+	app.get('/auth/claude/accounts', (_request, reply) => reply.send(ProviderSettings.list('claude')));
+	app.post('/auth/claude/accounts/:accountKey/activate', (request, reply) => {
+		const { accountKey } = request.params as { accountKey: string };
+		return reply.code(ProviderSettings.activate('claude', accountKey) ? 200 : 404).send({ ok: ProviderSettings.get('claude')?.accountKey === accountKey });
+	});
+	app.post('/auth/claude/accounts/:accountKey/remove', (request, reply) => {
+		ProviderSettings.removeAccount('claude', (request.params as { accountKey: string }).accountKey);
+		return reply.send({ ok: true });
+	});
+
 	app.post('/auth/claude/logout', (_request, reply) => {
 		OAuth.logout();
 
@@ -103,6 +113,16 @@ const plugin: FastifyPluginCallback = (app) => {
 
 	app.get('/auth/openai/status', (_request, reply) => {
 		return reply.send(OpenAIOAuthService.getAuthStatus());
+	});
+
+	app.get('/auth/openai/accounts', (_request, reply) => reply.send(ProviderSettings.list('openai')));
+	app.post('/auth/openai/accounts/:accountKey/activate', (request, reply) => {
+		const { accountKey } = request.params as { accountKey: string };
+		return reply.code(ProviderSettings.activate('openai', accountKey) ? 200 : 404).send({ ok: ProviderSettings.get('openai')?.accountKey === accountKey });
+	});
+	app.post('/auth/openai/accounts/:accountKey/remove', (request, reply) => {
+		ProviderSettings.removeAccount('openai', (request.params as { accountKey: string }).accountKey);
+		return reply.send({ ok: true });
 	});
 
 	app.post('/auth/openai/logout', (_request, reply) => {

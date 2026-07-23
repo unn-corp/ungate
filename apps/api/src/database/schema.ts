@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const appSettings = sqliteTable('app_settings', {
 	id: integer()
@@ -11,7 +11,9 @@ export const appSettings = sqliteTable('app_settings', {
 });
 
 export const providerSettings = sqliteTable('provider_settings', {
-	provider: text().primaryKey(),
+	provider: text().notNull(),
+	accountKey: text().notNull(),
+	isActive: integer({ mode: 'boolean' }).notNull().default(false),
 	accessToken: text().notNull(),
 	refreshToken: text(),
 	expiresAt: integer(),
@@ -19,7 +21,7 @@ export const providerSettings = sqliteTable('provider_settings', {
 	accountId: text(),
 	createdAt: integer().notNull(),
 	baseUrl: text()
-});
+}, (table) => [primaryKey({ columns: [table.provider, table.accountKey] })]);
 
 export const modelMappings = sqliteTable('model_mappings', {
 	id: text().primaryKey(),

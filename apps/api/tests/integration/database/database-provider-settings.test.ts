@@ -31,4 +31,17 @@ describe('database-provider-settings', () => {
 		expect(row?.email).toBe('user@example.com');
 		expect(row?.accountId).toBe('acc');
 	});
+
+	it('retains multiple OAuth accounts and routes through the selected active account', () => {
+		ProviderSettings.upsertOAuth('claude', { accessToken: 'first', refreshToken: 'r1', accountId: 'account-1', email: 'one@example.com' });
+		ProviderSettings.upsertOAuth('claude', { accessToken: 'second', refreshToken: 'r2', accountId: 'account-2', email: 'two@example.com' });
+
+		expect(ProviderSettings.list('claude')).toHaveLength(2);
+		expect(ProviderSettings.get('claude')?.accessToken).toBe('second');
+		expect(ProviderSettings.activate('claude', 'account-1')).toBe(true);
+		expect(ProviderSettings.get('claude')?.accessToken).toBe('first');
+
+		ProviderSettings.removeAccount('claude', 'account-1');
+		expect(ProviderSettings.get('claude')?.accessToken).toBe('second');
+	});
 });

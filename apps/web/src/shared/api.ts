@@ -131,6 +131,14 @@ export class Api {
 		return this.post('/auth/claude/logout');
 	}
 
+	static authAccounts(provider: 'claude' | 'openai'): Promise<Array<{ accountKey: string; email?: string | null; accountId?: string | null; isActive: boolean }>> {
+		return this.get(`/auth/${provider}/accounts`);
+	}
+
+	static authActivateAccount(provider: 'claude' | 'openai', accountKey: string): Promise<{ ok: boolean }> {
+		return this.post(`/auth/${provider}/accounts/${encodeURIComponent(accountKey)}/activate`);
+	}
+
 	static authMinimaxStatus(): Promise<{ authenticated: boolean; baseUrl?: string }> {
 		return this.get('/auth/minimax/status');
 	}

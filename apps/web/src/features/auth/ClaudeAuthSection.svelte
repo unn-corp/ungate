@@ -17,6 +17,7 @@ let { onAuthStatusChange }: Props = $props();
 
 let authenticated = $state(false);
 let email = $state<string | undefined>(undefined);
+let accounts = $state<Array<{ accountKey: string; email?: string | null; isActive: boolean }>>([]);
 let loading = $state(true);
 let phase = $state<Phase>('idle');
 let authUrl = $state('');
@@ -33,14 +34,22 @@ async function loadStatus() {
 	error = null;
 
 	try {
-		const status = await Api.authStatus();
+		const [status, savedAccounts] = await Promise.all([Api.authStatus(), Api.authAccounts('claude')]);
 		authenticated = status.authenticated;
 		email = status.email;
+		accounts = savedAccounts;
 	} catch (e) {
 		error = e instanceof Error ? e.message : String(e);
 	}
 
 	loading = false;
+}
+
+async function handleAccountChange(event: Event) {
+	const accountKey = (event.currentTarget as HTMLSelectElement).value;
+	await Api.authActivateAccount('claude', accountKey);
+	await loadStatus();
+	onAuthStatusChange?.();
 }
 
 async function handleStartLogin() {
@@ -123,6 +132,16 @@ function handleCancelLogin() {
 				<IconCheck class="size-4 text-success-500" />
 				<span>Logged in{email ? ` as ${email}` : ''}</span>
 			</div>
+			{#if accounts.length > 1}
+				<label class="text-xs text-surface-400 space-y-1 block">Active account
+					<select class="select select-sm w-full" onchange={handleAccountChange}>
+						{#each accounts as account}
+							<option value={account.accountKey} selected={account.isActive}>{account.email ?? account.accountKey}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+			<button class="btn btn-sm preset-tonal-surface w-fit" onclick={handleStartLogin}>Add another Claude account</button>
 			<button
 				class="btn btn-sm preset-filled-surface-500 border border-surface-500/50 hover:preset-filled-surface-400 w-fit"
 				onclick={handleLogout}>

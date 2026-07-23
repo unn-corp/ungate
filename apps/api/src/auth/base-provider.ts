@@ -6,6 +6,7 @@ export interface OAuthCredentials {
 	expiresAt?: number | null;
 	email?: string | null;
 	accountId?: string | null;
+	accountKey?: string;
 }
 
 export interface AIProvider {

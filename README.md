@@ -17,6 +17,8 @@
 
 Ungate lets you use Claude, ChatGPT, and MiniMax in Cursor through account subscriptions instead of direct API token billing. Claude and ChatGPT authenticate via OAuth; MiniMax uses provider API credentials.
 
+Claude and ChatGPT can each retain multiple signed-in accounts. Choose the active account in its provider card; new requests use that account until you switch again. MiniMax remains a single API-key configuration.
+
 Cursor allows a custom OpenAI Base URL. Ungate listens on that URL and translates requests to the target provider API, including streaming, tool calls, and vision where supported.
 
 The extension manages the tunnel that makes the proxy reachable to Cursor's backend and shows its settings in a Webview panel. From there you configure providers, copy the public proxy URL, and copy the proxy API key that Cursor uses to authenticate to your local proxy.
