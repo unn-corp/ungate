@@ -90,6 +90,18 @@ Or use Cursor's Extensions panel → `...` → **Install from VSIX...**. Verify 
 
 This maintained distribution is intentionally GitHub-release only; it is not published to Open VSX or the marketplace.
 
+### Node 22 runtime
+
+Verify the runtime before installing the extension:
+
+```sh
+node --version # must print v22.x
+```
+
+- **Linux/macOS:** install Node 22 from <https://nodejs.org/> or use `nvm install 22 && nvm use 22`.
+- **Windows:** install the Node 22 LTS `.msi` from nodejs.org, reopen Cursor, then run `node --version` in a new terminal.
+- **Desktop-launch override:** set `UNGATE_NODE_BIN` to the full path of a Node 22 executable when Cursor cannot see your normal shell runtime (for example, `C:\\Program Files\\nodejs\\node.exe`). An invalid override fails explicitly; Ungate never silently chooses a different system Node.
+
 ## Setup
 
 Install the extension, then open the dashboard by clicking the `Ungate` item in the status bar.
