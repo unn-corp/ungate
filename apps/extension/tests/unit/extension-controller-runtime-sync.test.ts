@@ -62,6 +62,7 @@ const runtimeRemoveClientMock = vi.fn<(windowId: string) => Promise<RuntimeState
 const runtimeGetLeaderWindowIdMock = vi.fn<(state: RuntimeState) => string | null>();
 const runtimePeekCommandMock = vi.fn<() => null>();
 const prepareApiForBootstrapMock = vi.fn(() => Promise.resolve(runtimeReadMock()));
+const clearStaleTunnelForBootstrapMock = vi.fn(() => Promise.resolve(runtimeReadMock()));
 
 const apiServerStartMock = vi.fn().mockResolvedValue(undefined);
 const apiServerStopMock = vi.fn().mockResolvedValue(undefined);
@@ -117,6 +118,7 @@ vi.mock('../../src/runtime-state', () => {
 
 				return runtimeState.api.startSuppressed === true;
 			},
+			clearStaleTunnelForBootstrap: (...args: unknown[]) => clearStaleTunnelForBootstrapMock(...args),
 			prepareApiForBootstrap: (...args: unknown[]) => prepareApiForBootstrapMock(...args)
 		}
 	};

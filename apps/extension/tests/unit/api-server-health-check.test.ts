@@ -72,6 +72,15 @@ vi.mock('../../src/utils/better-sqlite3-installer', () => {
 	};
 });
 
+vi.mock('../../src/utils/node-resolver', () => {
+	return {
+		NodeResolver: {
+			resolve: vi.fn(() => 'node'),
+			requireNode22: vi.fn(() => ({ version: 'v22.16.0', major: 22, abi: '127', platform: 'linux', arch: 'x64' }))
+		}
+	};
+});
+
 vi.mock('@ungate/shared', () => {
 	return {
 		sleep: sleepMock
