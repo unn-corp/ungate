@@ -20,6 +20,7 @@ interface ApiServerCallbacks {
 	isLeaderWindow(): boolean;
 	isExtensionHostActive(): boolean;
 	getWindowId(): string;
+	getGrokApprovalEnvironment?(): NodeJS.ProcessEnv;
 }
 
 export class ApiServer {
@@ -195,6 +196,7 @@ export class ApiServer {
 
 		const env: NodeJS.ProcessEnv = {
 			...process.env,
+			...this.callbacks.getGrokApprovalEnvironment?.(),
 			UNGATE_BETTER_SQLITE3_NATIVE_BINDING: BetterSqlite3Installer.getInstalledBinaryPath(cwd),
 			...(isDev ? { DB_PATH: path.join(os.homedir(), '.ungate', 'data-dev.db') } : { DRIZZLE_PATH: path.join(cwd, 'drizzle') })
 		};

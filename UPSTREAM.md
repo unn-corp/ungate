@@ -10,6 +10,8 @@
 - Distribution identity is `unn-corp.ungate`, released as GitHub VSIX assets.
 - Node 22.x is the supported runtime, with `UNGATE_NODE_BIN` as an explicit override.
 - Quick-tunnel URLs are cleared after a previous Cursor session and are usable only after Cloudflare connector registration.
+- SuperGrok is available through the local Grok CLI's existing OAuth session; Ungate does not persist Grok credentials.
+- OpenCode setup is distributed as a copy-safe local OpenAI-compatible provider snippet.
 
 ## Monthly sync procedure
 

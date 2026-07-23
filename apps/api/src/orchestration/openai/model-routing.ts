@@ -46,6 +46,10 @@ export class CompletionModelRouting {
 		return true;
 	}
 
+	static isGrokMapped(resolved: ModelMappingConfig | null): resolved is ModelMappingConfig {
+		return resolved?.provider === 'grok';
+	}
+
 	static buildOpenAiUpstreamBody(openaiBody: OpenAIChatRequest, resolved: ModelMappingConfig): OpenAIChatRequest {
 		const withModel: OpenAIChatRequest = {
 			...openaiBody,

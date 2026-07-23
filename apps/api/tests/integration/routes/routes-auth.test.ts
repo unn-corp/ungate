@@ -17,6 +17,15 @@ const openaiLogoutMock = vi.fn();
 const providerGetMock = vi.fn();
 const providerUpsertApiKeyMock = vi.fn();
 const providerRemoveMock = vi.fn();
+const grokStatusMock = vi.fn();
+const grokVerifyMock = vi.fn();
+
+vi.mock('src/auth/grok/grok-runtime', () => ({
+	GrokRuntime: {
+		status: (...args: unknown[]) => grokStatusMock(...args),
+		verify: (...args: unknown[]) => grokVerifyMock(...args)
+	}
+}));
 
 vi.mock('src/auth/oauth', () => ({
 	OAuth: {
@@ -76,6 +85,19 @@ describe('routes-auth', () => {
 		const logout = await app.inject({ method: 'POST', url: '/auth/claude/logout' });
 		expect(logout.json()).toEqual({ ok: true });
 		expect(oauthLogoutMock).toHaveBeenCalled();
+		await app.close();
+	});
+
+	it('reports and verifies the locally managed Grok CLI session without returning credentials', async () => {
+		grokStatusMock.mockReturnValueOnce({ installed: true, path: 'grok', version: 'grok 0.2', authenticated: null });
+		grokVerifyMock.mockResolvedValueOnce({ installed: true, path: 'grok', version: 'grok 0.2', authenticated: true });
+		const app = await withPlugin(authPlugin);
+
+		const status = await app.inject({ method: 'GET', url: '/auth/grok/status' });
+		expect(status.json()).toEqual({ installed: true, path: 'grok', version: 'grok 0.2', authenticated: null });
+
+		const verify = await app.inject({ method: 'POST', url: '/auth/grok/verify' });
+		expect(verify.json()).toEqual({ installed: true, path: 'grok', version: 'grok 0.2', authenticated: true });
 		await app.close();
 	});
 

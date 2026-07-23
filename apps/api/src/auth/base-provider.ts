@@ -1,4 +1,4 @@
-export type AIProviderName = 'claude' | 'minimax' | 'openai';
+export type AIProviderName = 'claude' | 'grok' | 'minimax' | 'openai';
 
 export interface OAuthCredentials {
 	accessToken: string;

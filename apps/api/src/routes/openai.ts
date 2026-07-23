@@ -1,6 +1,6 @@
 import { ModelMappings } from 'src/database/model-mappings';
 import { CompletionModelRouting } from 'src/orchestration/openai';
-import { ClaudeChatHandler, MiniMaxChatHandler, OpenAiMappedChatHandler } from 'src/orchestration/openai/provider-handlers';
+import { ClaudeChatHandler, GrokChatHandler, MiniMaxChatHandler, OpenAiMappedChatHandler } from 'src/orchestration/openai/provider-handlers';
 import { apiKeyAuth } from 'src/plugins/auth';
 import { logger } from 'src/utils/logger';
 
@@ -18,6 +18,10 @@ const plugin: FastifyPluginCallback = (app) => {
 			// Branch order matters: MiniMax (mapping or name prefix) before DB-mapped OpenAI, then default Claude path.
 			if (CompletionModelRouting.shouldRouteMiniMax(resolvedModel, openaiBody.model)) {
 				return MiniMaxChatHandler.handle(openaiBody, resolvedModel, reply);
+			}
+
+			if (CompletionModelRouting.isGrokMapped(resolvedModel)) {
+				return GrokChatHandler.handle(openaiBody, resolvedModel, reply);
 			}
 
 			if (CompletionModelRouting.isOpenAiMapped(resolvedModel)) {

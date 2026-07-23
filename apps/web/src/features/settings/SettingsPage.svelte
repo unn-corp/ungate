@@ -2,6 +2,7 @@
 import TunnelPanel from '../tunnel/TunnelPanel.svelte';
 
 import ModelsSection from './ModelsSection.svelte';
+import OpenCodePanel from './OpenCodePanel.svelte';
 import ProviderPanel from './ProviderPanel.svelte';
 import { getSettingsStore } from './settings-store.svelte';
 import { getSettingsUiStore } from './settings-ui-store.svelte';
@@ -26,6 +27,10 @@ function cloneModels(items: ModelMappingConfig[]): ModelMappingConfig[] {
 
 		if (model.provider === 'minimax') {
 			provider = 'minimax';
+		}
+
+		if (model.provider === 'grok') {
+			provider = 'grok';
 		}
 
 		if (model.provider === 'openai') {
@@ -210,6 +215,7 @@ $effect(() => {
 		<div class="card preset-tonal-surface border border-surface-700/30 p-5 space-y-4">
 			<p class="text-sm font-semibold">Provider</p>
 			<ProviderPanel />
+			<OpenCodePanel {port} {apiKey} {models} />
 			<ModelsSection
 				selectedProvider={uiStore.selectedProvider}
 				models={models}

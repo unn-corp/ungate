@@ -44,6 +44,12 @@ describe('CompletionModelRouting', () => {
 		expect(CompletionModelRouting.isOpenAiMapped(mapping({ provider: 'claude', upstreamModel: 'c' }))).toBe(false);
 	});
 
+	it('narrows Grok mappings without treating other providers as Grok', () => {
+		expect(CompletionModelRouting.isGrokMapped(mapping({ provider: 'grok', upstreamModel: 'grok-build' }))).toBe(true);
+		expect(CompletionModelRouting.isGrokMapped(mapping({ provider: 'claude', upstreamModel: 'claude-opus-4-8' }))).toBe(false);
+		expect(CompletionModelRouting.isGrokMapped(null)).toBe(false);
+	});
+
 	it('builds openai upstream body with optional reasoning effort', () => {
 		const body = { model: 'alias', messages: [], stream: false } as const;
 		const openai = mapping({ provider: 'openai', upstreamModel: 'gpt-real', reasoningBudget: 'high' });

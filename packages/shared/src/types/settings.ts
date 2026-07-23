@@ -1,8 +1,8 @@
 export type ReasoningBudgetTier = 'low' | 'medium' | 'high' | 'xhigh';
 
-export type ModelMappingProvider = 'claude' | 'minimax' | 'openai';
+export type ModelMappingProvider = 'claude' | 'grok' | 'minimax' | 'openai';
 
-export const MODEL_MAPPING_PROVIDERS = ['claude', 'minimax', 'openai'] as const;
+export const MODEL_MAPPING_PROVIDERS = ['claude', 'grok', 'minimax', 'openai'] as const;
 export const REASONING_BUDGET_TIERS = ['low', 'medium', 'high', 'xhigh'] as const;
 
 export interface ModelMappingConfig {

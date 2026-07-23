@@ -17,6 +17,7 @@
 		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
+		"@agentclientprotocol/sdk": "^0.15.0",
 		"@fastify/cors": "~11.2.0",
 		"@ungate/shared": "workspace:*",
 		"better-sqlite3": "12.9.0",

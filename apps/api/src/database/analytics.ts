@@ -16,6 +16,7 @@ export class Analytics {
 			.select({
 				totalRequests: sql<number>`COUNT(*)`,
 				claudeRequests: sql<number>`SUM(CASE WHEN ${requests.source} = 'claude' THEN 1 ELSE 0 END)`,
+				grokRequests: sql<number>`SUM(CASE WHEN ${requests.source} = 'grok' THEN 1 ELSE 0 END)`,
 				minimaxRequests: sql<number>`SUM(CASE WHEN ${requests.source} = 'minimax' THEN 1 ELSE 0 END)`,
 				openaiRequests: sql<number>`SUM(CASE WHEN ${requests.source} = 'openai' THEN 1 ELSE 0 END)`,
 				errorRequests: sql<number>`SUM(CASE WHEN ${requests.source} = 'error' THEN 1 ELSE 0 END)`,
@@ -29,6 +30,7 @@ export class Analytics {
 		return {
 			totalRequests: totals?.totalRequests ?? 0,
 			claudeRequests: totals?.claudeRequests ?? 0,
+			grokRequests: totals?.grokRequests ?? 0,
 			minimaxRequests: totals?.minimaxRequests ?? 0,
 			openaiRequests: totals?.openaiRequests ?? 0,
 			errorRequests: totals?.errorRequests ?? 0,

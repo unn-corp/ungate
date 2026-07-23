@@ -5,7 +5,7 @@
 <h3 align="center">UNN Ungate</h3>
 
 <p align="center">
-  A Cursor-first extension for using Claude, ChatGPT, and MiniMax subscriptions in Cursor<br/> instead of paying for API tokens.
+  A Cursor-first extension for using Claude, ChatGPT, MiniMax, and SuperGrok subscriptions in Cursor<br/> instead of paying for API tokens.
 </p>
 
 <p align="center">
@@ -15,9 +15,9 @@
 
 ## How it works
 
-Ungate lets you use Claude, ChatGPT, and MiniMax in Cursor through account subscriptions instead of direct API token billing. Claude and ChatGPT authenticate via OAuth; MiniMax uses provider API credentials.
+Ungate lets you use Claude, ChatGPT, MiniMax, and SuperGrok in Cursor through account subscriptions instead of direct API token billing. Claude and ChatGPT authenticate via OAuth; MiniMax uses provider API credentials; Grok uses the locally signed-in Grok CLI.
 
-Claude and ChatGPT can each retain multiple signed-in accounts. Choose the active account in its provider card; new requests use that account until you switch again. MiniMax remains a single API-key configuration.
+Claude and ChatGPT can each retain multiple signed-in accounts. Choose the active account in its provider card; new requests use that account until you switch again. MiniMax remains a single API-key configuration. Grok uses one active SuperGrok identity managed by `grok login`; Ungate never copies or stores its OAuth tokens.
 
 Cursor allows a custom OpenAI Base URL. Ungate listens on that URL and translates requests to the target provider API, including streaming, tool calls, and vision where supported.
 
@@ -58,20 +58,21 @@ sequenceDiagram
 - [x] MiniMax API key authentication
 - [x] MiniMax `<think>...</think>` reasoning separation
 - [x] Request analytics
-- [x] Analytics split by provider: Claude, OpenAI, and MiniMax
+- [x] SuperGrok support through the official local Grok CLI
+- [x] Analytics split by provider: Claude, OpenAI, MiniMax, and Grok
+- [x] Copy-safe OpenCode local-provider configuration
 - [x] Built-in web UI panel
 - [x] Keeps `OpenAI API Key` enabled when Cursor turns it off on its own
 
 ## Provider support
 
-| Capability | Claude | OpenAI | MiniMax |
-| --- | --- | --- | --- |
-| Authentication | OAuth | OAuth | API key |
-| Streaming | Yes | Yes | Yes |
-| Tool calls | Yes | Yes | Yes |
-| Vision | Yes | No | Yes |
-| Reasoning tiers | Yes | No | No |
-| Analytics | Yes | Yes | Yes |
+| Capability | Claude | OpenAI | MiniMax | Grok |
+| --- | --- | --- | --- | --- |
+| Authentication | OAuth | OAuth | API key | SuperGrok CLI OAuth |
+| Streaming | Yes | Yes | Yes | Yes |
+| Agent tools | Yes | Yes | Yes | Approval-gated native tools |
+| Vision | Yes | No | Yes | No |
+| Analytics | Yes | Yes | Yes | Yes |
 
 ## Prerequisites
 
@@ -85,7 +86,7 @@ sequenceDiagram
 Install a VSIX from the [GitHub Releases](https://github.com/unn-corp/ungate/releases) page:
 
 ```sh
-cursor --install-extension /path/to/unn-corp.ungate-1.7.4.vsix
+cursor --install-extension /path/to/unn-corp.ungate-1.7.6.vsix
 ```
 
 Or use Cursor's Extensions panel → `...` → **Install from VSIX...**. Verify the installed extension ID is `unn-corp.ungate`.
@@ -113,6 +114,7 @@ Install the extension, then open the dashboard by clicking the `Ungate` item in 
 Choose the provider you want to use and authenticate with it.  
 For Claude and ChatGPT, sign in through OAuth.  
 For MiniMax, enter your API key and choose a Base URL: `Global`, `China`, or `Custom`.
+For Grok, install and sign in to the official CLI with `grok login`, then choose **Verify Grok CLI** in Ungate. The CLI's currently signed-in SuperGrok account is used; xAI API keys are deliberately not supported.
 
 ### Configure Cursor
 
@@ -129,6 +131,10 @@ If Cursor turns `OpenAI API Key` off on its own, Ungate can turn it back on auto
 1. In the `Models` section, copy the model IDs you want and add them as custom models in Cursor.
 2. If you use MiniMax, add `MiniMax-M2.7` as a custom model in Cursor.
 3. Select one of your custom models in Cursor and start chatting.
+
+### Configure OpenCode
+
+Open **Settings → OpenCode** in Ungate and copy the generated `opencode.jsonc` snippet. It points OpenCode at `http://127.0.0.1:<port>/v1`, so it does not use the Cloudflare tunnel. If proxy authentication is enabled, copy the separate `UNGATE_API_KEY` export command before starting OpenCode. Then run `/models` and select `ungate/grok-build` or another mapped Ungate model.
 
 ## Quick verification
 
@@ -197,6 +203,8 @@ DB_PATH=$HOME/.ungate/data-dev.db PORT=4784 node dist/main.js
 | Cloudflare `1033` | Tunnel URL points to a previous connector | Restart Tunnel, then copy its new URL into Cursor |
 | `Unsupported Node runtime` | Node version in the Ungate output log | Install Node 22, or set `UNGATE_NODE_BIN` to a Node 22 executable |
 | OAuth session expired | Provider connection status | Reconnect provider in dashboard |
+| Grok CLI unavailable | Grok provider tab | Install Grok, run `grok login`, then Verify Grok CLI |
+| Grok tool request paused | Cursor permission dialog | Choose Allow once or Deny; approvals never persist |
 | Model missing in Cursor | Custom model list in Cursor | Add model ID manually from Ungate `Models` |
 
 ## Quick facts

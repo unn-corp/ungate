@@ -143,6 +143,14 @@ export class Api {
 		return this.get('/auth/minimax/status');
 	}
 
+	static authGrokStatus(): Promise<{ installed: boolean; path: string; version: string | null; authenticated: boolean | null; error?: string }> {
+		return this.get('/auth/grok/status');
+	}
+
+	static authGrokVerify(): Promise<{ installed: boolean; path: string; version: string | null; authenticated: boolean | null; error?: string }> {
+		return this.post('/auth/grok/verify');
+	}
+
 	static authMinimaxLogin(apiKey: string, baseUrl: string): Promise<{ ok: boolean; error?: string }> {
 		return this.post('/auth/minimax/login', { apiKey, baseUrl });
 	}

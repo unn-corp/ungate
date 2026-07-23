@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.6 - 2026-07-22
+
+- Add SuperGrok support through the locally authenticated Grok CLI.
+- Add one-time Cursor approval prompts for Grok-native agent tools.
+- Add a copy-safe local OpenCode provider configuration panel.
+
 ## 1.7.5 - 2026-07-22
 
 - Retain multiple Claude and ChatGPT OAuth accounts locally.

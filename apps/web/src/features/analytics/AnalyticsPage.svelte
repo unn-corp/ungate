@@ -66,13 +66,17 @@ function handleConfirmReset() {
 	{/if}
 
 	{#if store.summary}
-		<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+		<div class="grid grid-cols-2 md:grid-cols-6 gap-4">
 			<StatCard
 				label="Total Requests"
 				value={Formatter.number(store.summary.totalRequests)} />
 			<StatCard
 				label={getProviderLabel('claude')}
 				value={Formatter.number(store.summary.claudeRequests)}
+				variant="success" />
+			<StatCard
+				label={getProviderLabel('grok')}
+				value={Formatter.number(store.summary.grokRequests)}
 				variant="success" />
 			<StatCard
 				label={getProviderLabel('minimax')}

@@ -11,6 +11,10 @@ export function detectProviderByModel(model: string): ModelMappingProvider {
 		return 'minimax';
 	}
 
+	if (normalized.startsWith('grok')) {
+		return 'grok';
+	}
+
 	return 'claude';
 }
 
@@ -21,6 +25,10 @@ export function detectProviderBySource(source: RequestSource): ModelMappingProvi
 
 	if (source === 'minimax') {
 		return 'minimax';
+	}
+
+	if (source === 'grok') {
+		return 'grok';
 	}
 
 	if (source === 'claude') {

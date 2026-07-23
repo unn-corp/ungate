@@ -1,4 +1,5 @@
 import { OAuth } from '../auth/oauth';
+import { GrokRuntime } from '../auth/grok/grok-runtime';
 import { OpenAIOAuthService } from '../auth/openai/openai-oauth-service';
 import { config } from '../config';
 import { ProviderSettings } from '../database/provider-settings';
@@ -6,6 +7,9 @@ import { ProviderSettings } from '../database/provider-settings';
 import type { FastifyPluginCallback } from 'fastify';
 
 const plugin: FastifyPluginCallback = (app) => {
+	app.get('/auth/grok/status', (_request, reply) => reply.send(GrokRuntime.status()));
+	app.post('/auth/grok/verify', async (_request, reply) => reply.send(await GrokRuntime.verify()));
+
 	app.post('/auth/claude/start', async (_request, reply) => {
 		const result = await OAuth.startLogin();
 

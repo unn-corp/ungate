@@ -14,6 +14,7 @@ import { ApiServer } from './api-server';
 import { Dashboard, type Msg } from './dashboard';
 import { extensionCommands } from './extension-commands';
 import { ExtensionStatusBar } from './extension-status-bar';
+import { GrokApprovalBridge } from './grok-approval-bridge';
 import { OpenAiKeyFix } from './openai-key-fix';
 import { RuntimeStateStore } from './runtime-state';
 import { config } from './runtime-state/config';
@@ -28,6 +29,7 @@ export class ExtensionController {
 	private tunnelManager!: TunnelManager;
 	private apiServer!: ApiServer;
 	private keyFix!: OpenAiKeyFix;
+	private grokApprovalBridge!: GrokApprovalBridge;
 	private currentPort: number | null = null;
 	private lastApiStatus: ApiLifecycleStatus | null = null;
 	private currentTunnelState: TunnelState = { status: 'stopped', url: null, error: null };
@@ -66,6 +68,7 @@ export class ExtensionController {
 				return this.isLeaderWindow();
 			}
 		);
+		this.grokApprovalBridge = new GrokApprovalBridge((message) => this.log(message));
 
 		this.tunnelManager = new TunnelManager(
 			this.windowId,
@@ -100,6 +103,9 @@ export class ExtensionController {
 			},
 			getWindowId: () => {
 				return this.windowId;
+			},
+			getGrokApprovalEnvironment: () => {
+				return this.grokApprovalBridge.getEnvironment();
 			}
 		});
 
@@ -123,7 +129,9 @@ export class ExtensionController {
 		this.startHeartbeat();
 		this.startRuntimeSync();
 		this.startRuntimeStateWatch();
-		void this.bootstrapRuntime()
+		void this.grokApprovalBridge
+			.start()
+			.then(() => this.bootstrapRuntime())
 			.then(() => this.keyFix.activate())
 			.catch((error: unknown) => {
 				this.log(`[openai-key-fix] activation failed: ${this.formatError(error)}`);
@@ -166,6 +174,7 @@ export class ExtensionController {
 		}
 
 		this.keyFix?.stop();
+		void this.grokApprovalBridge?.dispose();
 		const stateAfterStop = RuntimeStateStore.read();
 		const hasLiveClients = RuntimeStateStore.hasLiveClients(stateAfterStop);
 
