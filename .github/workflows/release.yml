@@ -18,6 +18,7 @@ jobs:
       - run: corepack enable
       - run: corepack prepare pnpm@10.33.1 --activate
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ungate/dev-kit build
       - run: pnpm test
       - run: pnpm run package:build
       - name: Prepare release assets and notes
